@@ -4,12 +4,12 @@ import tornado.ioloop
 import tornado.web
 
 from .WebServer import WebServer
-from lovelib.server.websocket import LoveBotWebSocket
+from .WebSocket import WebSocket
 
 
 def run():
     application = tornado.web.Application([
-        (r"/ws", LoveBotWebSocket),
+        (r"/ws", WebSocket),
         (r"/.*", WebServer),
     ])
     application.listen(8001)
