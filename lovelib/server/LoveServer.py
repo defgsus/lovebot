@@ -30,18 +30,30 @@ class LoveServer(object):
         if ip in self.connections:
             con.error_response("IP %s already connected" % ip)
             return False
-        self.connections[ip] = {
+        new_con = {
             "con": con,
             "id": str(id(con)),
             "ip": ip,
             "event_count": -1,
         }
+        self.connections[ip] = new_con
+        self.send_event("connection_opened", id=new_con["id"])
         return True
 
     def remove_connection(self, con):
         ip = con.request.remote_ip
         if ip in self.connections:
+            self.send_event("connection_closed", id=self.connections[ip]["id"])
             del self.connections[ip]
+
+    def send_event(self, event_name, **kwargs):
+        """Send to all connections"""
+        for con in self.connections.values():
+            self.send(
+                con["con"],
+                "event",
+                {"ts": self.world.sim_time, "name": event_name, "data": kwargs}
+            )
 
     def connections_json(self):
         return [
@@ -55,23 +67,44 @@ class LoveServer(object):
             for b in self.world.bots.values()
         ]
 
-    def on_command(self, con, cmd):
+    def on_command(self, con, cmd, args=None):
         if isinstance(cmd, str):
             cmd = {"name": cmd}
-        if "name" not in cmd:
+        name = cmd.get("name")
+        if not "name":
             con.error_response("No 'name' in 'cmd'")
-        name = cmd["name"]
-        args = cmd.get("args", {})
+            return False
+        args = args or {}
 
         if name == "get_world":
             self.send(con, "world", self.world.to_json())
+
         elif name == "get_connections":
             self.send(con, "connections", self.connections_json())
+
         elif name == "get_bots":
             self.send(con, "bots", self.bots_json())
+
         elif name == "create_bot":
             name = args.get("name", self.get_random_bot_name())
-            bot = self.world.create_new_bot(name=name)
+            self.world.create_new_bot(name=name)
+
+        elif name == "set_wheel_speed":
+            bot_id = args.get("bot_id", "")
+            if bot_id not in self.world.bots:
+                con.error_response("unknown bot_id '%s'" % bot_id)
+            else:
+                bot = self.world.bots[bot_id]
+                sleft, sright = args.get("left"), args.get("right")
+                if not isinstance(sleft, (float, int)):
+                    sleft = bot.l_wheel.speed
+                if not isinstance(sright, (float, int)):
+                    sright = bot.r_wheel.speed
+                bot.set_wheel_speed(sleft, sright)
+        else:
+            con.error_response("unknown command '%s'" % name)
+            return False
+        return True
 
     def simulation_mainloop(self):
         last_time = time.time()
@@ -81,14 +114,14 @@ class LoveServer(object):
             self.world.step(delta_time)
             last_time = cur_time
 
-            self.send_events()
+            self.queue_world_events()
 
             time.sleep(1./30.)
 
     def send(self, con, topic, data):
         con.write_message_json({topic: data})
 
-    def send_events(self):
+    def queue_world_events(self):
         send_events = []
         while self.world.event_stack:
             event_count, event_data = self.world.event_stack.pop(0)

@@ -20,7 +20,7 @@ class World:
 
     def create_new_bot_id(self):
         self._bot_count += 1
-        return "BOT%s" % self._bot_count
+        return "B%s" % self._bot_count
 
     def create_new_bot(self, **kwargs):
         b = Robot(bot_id=self.create_new_bot_id(), world=self, **kwargs)

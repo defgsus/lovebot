@@ -24,10 +24,11 @@ class WebSocket(tornado.websocket.WebSocketHandler):
         print("msg: %s" % message)
         try:
             data = json.loads(message)
-            if not "cmd" in data:
+            cmd = data.get("cmd")
+            if not cmd:
                 self.error_response("No 'cmd'")
             else:
-                self.server.on_command(self, data["cmd"])
+                self.server.on_command(self, data["cmd"], data.get("args"))
         except ValueError:
             self.error_response("Invalid json")
 

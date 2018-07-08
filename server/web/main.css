@@ -45,3 +45,19 @@
     background: #f0f0ff;
     padding-left: 10px;
 }
+
+.command-forms {
+    position: relative;
+}
+
+.command-forms form {
+    margin: 10px 0 10px 0;
+}
+
+.command-forms form button {
+    width: 25%;
+}
+
+.command-forms form input {
+    max-width: 12%;
+}

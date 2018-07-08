@@ -51,7 +51,7 @@ class Robot:
             "wheel_speed": [self.l_wheel.speed, self.r_wheel.speed],
         }
 
-    def set_speed(self, left, right):
+    def set_wheel_speed(self, left, right):
         self.l_wheel.speed = left
         self.r_wheel.speed = right
 

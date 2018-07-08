@@ -17,6 +17,32 @@
     <div class="side-by-side">
         <div>
             <img src="/worldmap.png">
+
+            <div class="command-forms">
+                <form data-cmd="get_world">
+                    <button type="submit">get_world</button>
+                </form>
+
+                <form data-cmd="get_bots">
+                    <button type="submit">get_bots</button>
+                </form>
+
+                <form data-cmd="get_connections">
+                    <button type="submit">get_connections</button>
+                </form>
+
+                <form data-cmd="create_bot">
+                    <button type="submit">create_bot</button>
+                    <input type="text" name="name" placeholder="name">
+                </form>
+
+                <form data-cmd="set_wheel_speed">
+                    <button type="submit">set_wheel_speed</button>
+                    <input type="text" name="bot_id" placeholder="bot_id">
+                    <input type="number" step="0.001" name="left" placeholder="left">
+                    <input type="number" step="0.001" name="right" placeholder="right">
+                </form>
+            </div>
         </div>
 
         <div>
