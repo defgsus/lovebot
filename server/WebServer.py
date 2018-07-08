@@ -10,7 +10,7 @@ class WebServer(tornado.web.RequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.resources = {
-            "/index.html", "/main.css", "/main.js"
+            "/index.html", "/main.css", "/main.js", "/jquery.js",
         }
         self.loaded_resources = dict()
         self.resource_path = os.path.join(os.path.dirname(__file__), "web")
@@ -40,5 +40,9 @@ class WebServer(tornado.web.RequestHandler):
         if url == "/":
             url = "/index.html"
         self.write(self.get_resource(url))
+        if url.endswith(".css"):
+            self.set_header("Content-Type", "text/css")
+        elif url.endswith(".js"):
+            self.set_header("Content-Type", "text/javascript")
         #self.write("<pre>args=%s\nkwargs=%s\nreq=%s</pre>" % (args, kwargs, self.request))
 

@@ -48,7 +48,7 @@ class DistanceField:
 
         if bounding_box is None:
             bounding_box = self.bounding_box()
-            bounding_box.adjust(-1,-1,1,1)
+            bounding_box.adjust(-1,-1, 1,1)
 
         rows = []
         for py in range(height):
@@ -63,3 +63,9 @@ class DistanceField:
 
         image = png.from_array(rows, "RGB")
         image.save(file)
+
+    def to_json(self):
+        return {
+            "bbox": self.bounding_box().to_json(),
+            "objects": [o.to_json() for o in self.objects],
+        }

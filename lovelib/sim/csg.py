@@ -35,6 +35,15 @@ class BoundingBox:
         self.max_y += y2
         return self
 
+    def to_json(self):
+        return {
+            "min_x": self.min_x,
+            "min_y": self.min_y,
+            "max_x": self.max_x,
+            "max_y": self.max_y,
+        }
+
+
 class Point:
 
     def __init__(self, x, y):
@@ -50,6 +59,13 @@ class Point:
     
     def bounding_box(self):
         return BoundingBox(self.x, self.y, self.x, self.y)
+
+    def to_json(self):
+        return {
+            "type": "point",
+            "x": self.x,
+            "y": self.y,
+        }
 
 
 class Circle(Point):
@@ -67,6 +83,15 @@ class Circle(Point):
         return BoundingBox(self.x-self.radius, self.y-self.radius,
                            self.x+self.radius, self.y+self.radius)
 
+    def to_json(self):
+        return {
+            "type": "circle",
+            "x": self.x,
+            "y": self.y,
+            "radius": self.radius,
+            "inverted": self.inverted,
+        }
+
 
 class Rectangle(Point):
     def __init__(self, x, y, width, height, inverted=False):
@@ -81,5 +106,15 @@ class Rectangle(Point):
         return -d if self.inverted else d
 
     def bounding_box(self):
-        w, h = self.width*.5, self.height*.5
+        w, h = self.width, self.height
         return BoundingBox(self.x-w, self.y-h, self.x+w, self.y+h)
+
+    def to_json(self):
+        return {
+            "type": "rectangle",
+            "x": self.x,
+            "y": self.y,
+            "width": self.width,
+            "height": self.height,
+            "inverted": self.inverted,
+        }

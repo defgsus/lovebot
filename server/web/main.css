@@ -1,0 +1,47 @@
+.side-by-side {
+    display: flex;
+    flex-direction: row;
+}
+
+.side-by-side > div {
+    margin: 5px;
+}
+
+
+.log-window {
+    border: 1px solid gray;
+    border-radius: 10px;
+    background: #aaa;
+    font-family: Mono, Monospaced, Curier;
+    font-size: .8em;
+}
+
+.event-log-window {
+    border: 1px solid gray;
+    border-radius: 10px;
+    background: #d0e0e0;
+    font-family: Mono, Monospaced, Curier;
+    font-size: .8em;
+}
+
+
+.log-window div {
+    margin: 3px;
+    border-radius: 5px;
+}
+
+.event-log-window div {
+    margin: 3px;
+    border-radius: 5px;
+    background: #f0ffff;
+}
+
+.to-server {
+    background: #d0d0f0;
+    padding-left: 1px;
+}
+
+.from-server {
+    background: #f0f0ff;
+    padding-left: 10px;
+}

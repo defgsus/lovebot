@@ -22,3 +22,4 @@ def collide_sphere_with_distancefield(x, y, radius, x_vel, y_vel, df):
     if d <= 0.:
         nx, ny = df.normal(x, y)
         return -d * nx, -d * ny
+    return 0., 0.

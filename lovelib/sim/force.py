@@ -19,10 +19,14 @@ class ForceMixin:
 
 
 class PointWithForce(Point, ForceMixin):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        ForceMixin.__init__(self)
 
 
 class CircleWithForce(Circle, ForceMixin):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        ForceMixin.__init__(self)
 
 

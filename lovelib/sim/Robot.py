@@ -11,10 +11,11 @@ class Wheel(PointWithForce):
 
 class Robot:
 
-    def __init__(self, bot_id, world, heading=None):
+    def __init__(self, bot_id, world, heading=None, name=None):
         self.bot_id = bot_id
         self.world = world
         self.radius = 1.
+        self.name = name or str(bot_id)
         if heading is None:
             heading = random.uniform(0, 7)
         si, ca = math.sin(heading), math.cos(heading)
@@ -38,15 +39,16 @@ class Robot:
         return (self.l_wheel.x_vel + self.r_wheel.x_vel) * .5, \
                (self.l_wheel.y_vel + self.r_wheel.y_vel) * .5,
 
-    def state(self):
+    def to_json(self):
         return {
-            "time": self.world.sim_time,
             "world_id": self.world.world_id,
-            "bot_id": self.bot_id,
-            "program_id": self.program_id if hasattr(self, "program_id") else "undefined",
+            "id": self.bot_id,
+            "name": self.name,
+            "radius": self.radius,
             "center": self.center(),
             "p_center": self.prev_center(),
             "heading": self.heading(),
+            "wheel_speed": [self.l_wheel.speed, self.r_wheel.speed],
         }
 
     def set_speed(self, left, right):
@@ -85,7 +87,8 @@ class Robot:
 
             # wheel with world collision
             for w in self.wheels:
-                x_vel, y_vel = collide_sphere_with_distancefield(w.x, w.y, 0.01, self.world.df)
+                x_vel, y_vel = collide_sphere_with_distancefield(
+                    w.x, w.y, 0.01, w.x_vel, w.y_vel, self.world.df)
                 w.x_vel += x_vel * dt
                 w.y_vel += y_vel * dt
                 w.apply_force(dt)
