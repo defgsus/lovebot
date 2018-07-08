@@ -1,5 +1,6 @@
 
 var websocket = null;
+var updateInterval = 100;
 
 var API = {
     get_world: function () {
@@ -25,8 +26,9 @@ function connect_to_websocket() {
     websocket = new WebSocket("ws://127.0.0.1:8001/ws");
 
     websocket.onopen = function() {
-        /*API.get_connections();
         API.get_world();
+        API.get_bots();
+        /*API.get_connections();
         API.create_bot("Viktor");
         API.get_bots()*/
         //API.set_wheel_speed("BOT1", .1, .03);
@@ -36,17 +38,29 @@ function connect_to_websocket() {
         var data = JSON.parse(evt.data);
         if (data.event)
             log_event(data.event);
-        log(data, "from-server");
+
+        if (data.world) {
+            world = data.world;
+            paintWorldCanvas();
+        }
+        else if (data.bots) {
+            bots = data.bots;
+            paintWorldCanvas();
+            setTimeout(function () { API.get_bots(); }, updateInterval);
+        }
+        else
+            log(data, "from-server");
     };
 }
 
-function send_command(cmd, args) {
-    var cmd = {cmd: cmd};
+function send_command(cmd_name, args) {
+    var cmd = {cmd: cmd_name};
     if (args) {
         cmd.args = args;
     }
     var msg = JSON.stringify(cmd);
-    log(msg, "to-server");
+    if (cmd_name !== "get_bots")
+        log(msg, "to-server");
     websocket.send(msg);
 }
 
@@ -93,8 +107,47 @@ function hookToCommandForms() {
 }
 
 
+var worldBackgroundImage = new Image();
+worldBackgroundImage.src = "/worldmap.png";
+
+var world = null;
+var bots = null;
+var canvas = null;
+
+
+function paintWorldCanvas() {
+    if (!canvas) {
+        canvas = document.getElementById("world-canvas").getContext("2d");
+    }
+
+    canvas.drawImage(worldBackgroundImage, 0, 0);
+    var res_x = worldBackgroundImage.width;
+    var res_y = worldBackgroundImage.height;
+
+    if (world && bots) {
+        var bbox = world.df.bbox;
+
+        canvas.fillStyle = 'green';
+        for (var i in bots) {
+            var bot = bots[i];
+            var x = (bot.center[0] - bbox.min_x) / (bbox.max_x - bbox.min_x) * res_x;
+            var y = res_y - 1 - (bot.center[1] - bbox.min_y) / (bbox.max_y - bbox.min_y) * res_y;
+            var r = bot.radius / (bbox.max_y - bbox.min_y) * res_y;
+            canvas.beginPath();
+            canvas.arc(x, y, r, 0, Math.PI * 2., false);
+            canvas.fill();
+        }
+
+    }
+
+}
+
 $(function() {
 
     connect_to_websocket();
     hookToCommandForms();
+
+    $("#update-interval").on("change", function(e) {
+        updateInterval = parseInt($("#update-interval").val());
+    });
 });

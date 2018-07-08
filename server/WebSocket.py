@@ -13,15 +13,16 @@ class WebSocket(tornado.websocket.WebSocketHandler):
         return self.server.world.sim_time
 
     def open(self):
+        print("WS OPEN", self)
         if not self.server.add_connection(self):
             self.close()
 
     def on_close(self):
+        print("WS CLOSE", self)
         self.server.remove_connection(self)
-        print("WebSocket closed")
 
     def on_message(self, message):
-        print("msg: %s" % message)
+        #print("msg: %s" % message)
         try:
             data = json.loads(message)
             cmd = data.get("cmd")

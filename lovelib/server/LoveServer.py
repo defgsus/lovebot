@@ -26,25 +26,25 @@ class LoveServer(object):
         return cls._instance
 
     def add_connection(self, con):
-        ip = con.request.remote_ip
-        if ip in self.connections:
-            con.error_response("IP %s already connected" % ip)
+        con_id = str(id(con))
+        if con_id in self.connections:
+            con.error_response("'%s' is already connected" % con_id)
             return False
         new_con = {
             "con": con,
-            "id": str(id(con)),
-            "ip": ip,
+            "id": con_id,
+            "ip": con.request.remote_ip,
             "event_count": -1,
         }
-        self.connections[ip] = new_con
+        self.connections[con_id] = new_con
         self.send_event("connection_opened", id=new_con["id"])
         return True
 
     def remove_connection(self, con):
-        ip = con.request.remote_ip
-        if ip in self.connections:
-            self.send_event("connection_closed", id=self.connections[ip]["id"])
-            del self.connections[ip]
+        con_id = str(id(con))
+        if con_id in self.connections:
+            del self.connections[con_id]
+        self.send_event("connection_closed", id=con_id)
 
     def send_event(self, event_name, **kwargs):
         """Send to all connections"""
@@ -86,8 +86,15 @@ class LoveServer(object):
             self.send(con, "bots", self.bots_json())
 
         elif name == "create_bot":
-            name = args.get("name", self.get_random_bot_name())
-            self.world.create_new_bot(name=name)
+            name = args.get("name") or self.get_random_bot_name()
+            if args.get("bot_id"):
+                bot_id = args["bot_id"]
+                if bot_id in self.world.bots:
+                    con.error_response("duplicate bot_id '%s'" % bot_id)
+                else:
+                    self.world.create_new_bot(name=name, bot_id=bot_id)
+            else:
+                self.world.create_new_bot(name=name)
 
         elif name == "set_wheel_speed":
             bot_id = args.get("bot_id", "")

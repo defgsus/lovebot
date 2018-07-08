@@ -11,16 +11,17 @@ class Wheel(PointWithForce):
 
 class Robot:
 
-    def __init__(self, bot_id, world, heading=None, name=None):
+    def __init__(self, bot_id, world, heading=None, name=None,
+                 x=0., y=0., radius=1.):
         self.bot_id = bot_id
         self.world = world
-        self.radius = 1.
+        self.radius = radius
         self.name = name or str(bot_id)
         if heading is None:
             heading = random.uniform(0, 7)
         si, ca = math.sin(heading), math.cos(heading)
-        self.l_wheel = Wheel(-self.radius * si, -self.radius * ca)
-        self.r_wheel = Wheel( self.radius * si,  self.radius * ca)
+        self.l_wheel = Wheel(x-self.radius * si, y-self.radius * ca)
+        self.r_wheel = Wheel(x+self.radius * si, y+self.radius * ca)
         self.wheels = (self.l_wheel, self.r_wheel)
         self.prev_c = []
 
@@ -66,7 +67,7 @@ class Robot:
         for it in range(iter):
 
             # bot/world collision
-            self._bot_world_collision(dt)
+            self._bot_world_collision(dt*3.)
 
             # velocity from wheel-speed
             for w in self.wheels:
@@ -104,5 +105,7 @@ class Robot:
 
         vel_x, vel_y = collide_sphere_with_distancefield(
             center_x, center_y, self.radius, vel_x, vel_y, self.world.df)
-
+        for w in self.wheels:
+            w.x += vel_x
+            w.y += vel_y
         self.add_force(vel_x*dt, vel_y*dt)

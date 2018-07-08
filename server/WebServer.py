@@ -27,7 +27,10 @@ class WebServer(tornado.web.RequestHandler):
             else:
                 if r == "/worldmap.png":
                     data = BytesIO()
-                    LoveServer.instance().world.df.save_png(data, 320, 320)
+                    LoveServer.instance().world.df.save_png(
+                        data, 640, 640,
+                        bounding_box=LoveServer.instance().world.df.bounding_box(),
+                    )
                     data.seek(0)
                     self.loaded_resources[r] = data.read()
                 else:
@@ -40,9 +43,13 @@ class WebServer(tornado.web.RequestHandler):
         if url == "/":
             url = "/index.html"
         self.write(self.get_resource(url))
-        if url.endswith(".css"):
-            self.set_header("Content-Type", "text/css")
-        elif url.endswith(".js"):
-            self.set_header("Content-Type", "text/javascript")
+        for ext, ctype in (
+                ("css", "text/css"),
+                ("js", "text/javascript"),
+                ("png", "image/png"),
+        ):
+            if url.endswith(".%s" % ext):
+                self.set_header("Content-Type", ctype)
+                break
         #self.write("<pre>args=%s\nkwargs=%s\nreq=%s</pre>" % (args, kwargs, self.request))
 

@@ -52,7 +52,7 @@ class DistanceField:
 
         rows = []
         for py in range(height):
-            y = bounding_box.min_y + bounding_box.height * py / height
+            y = bounding_box.min_y + bounding_box.height * (height-1-py) / height
             row = []
             for px in range(width):
                 x = bounding_box.min_x + bounding_box.width * px / width

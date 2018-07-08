@@ -15,15 +15,34 @@ class World:
         self.df = DistanceField()
 
         self.df.add(Rectangle(0, 0, 15, 15, True))
-        self.df.add(Rectangle(7, 2, 5, 9))
-        self.df.add(Circle(-4, -5, 3))
+        self.df.add(Rectangle(7, 2, 5, 9))  # 2, -7
+        self.df.add(Rectangle(-4, -4, 6, 3))
+        self.df.add(Circle(-4, 5, 3))
+
+        self.create_new_bot(name="Albert").set_wheel_speed(.5, .9)
+        self.create_new_bot(name="Sigmund").set_wheel_speed(1.3, .8)
+        self.create_new_bot(name="Eragon").set_wheel_speed(1.5, 1.8)
 
     def create_new_bot_id(self):
         self._bot_count += 1
         return "B%s" % self._bot_count
 
     def create_new_bot(self, **kwargs):
-        b = Robot(bot_id=self.create_new_bot_id(), world=self, **kwargs)
+        bbox = self.df.bounding_box()
+        radius = 1.
+        while True:
+            x = random.uniform(bbox.min_x+radius, bbox.max_x-radius)
+            y = random.uniform(bbox.min_y+radius, bbox.max_y-radius)
+            if self.df.distance_to(x, y) > radius:
+                break
+        if "bot_id" in kwargs:
+            bot_id = kwargs.pop("bot_id")
+            if bot_id in self.bots:
+                raise KeyError("duplicate bot_id '%s'" % bot_id)
+        else:
+            bot_id = self.create_new_bot_id()
+        b = Robot(x=x, y=y, radius=radius,
+                  bot_id=bot_id, world=self, **kwargs)
         self.bots[b.bot_id] = b
         self.add_event("bot_created", id=b.bot_id, name=b.name)
         return b
