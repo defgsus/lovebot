@@ -64,3 +64,6 @@ class LoveBot(object):
             nx, ny,
             max_steps=max_steps
         )
+
+    def trace_heading_degree(self, heading, max_steps=None):
+        return self.trace_heading(heading / 180. * math.pi, max_steps)

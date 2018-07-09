@@ -33,7 +33,6 @@ class LoveClient(object):
             callback=self._on_connect,
             on_message_callback=self._on_message,
         )
-        future.add_done_callback(self._on_connect)
 
     @property
     def world(self):
@@ -41,6 +40,7 @@ class LoveClient(object):
 
     def _on_connect(self, f):
         self.connection = f.result()
+        print("connected")
         self.api.get_world()
         self.api.get_bots()
 
@@ -65,9 +65,7 @@ class LoveClient(object):
     def _on_world(self, world):
         self._world = world
         self._world_interface = LoveWorld.from_json(self, self._world)
-        if not self._initialized and self._world and self._bots:
-            self._initialized = True
-            self.on_connect()
+
         self._call_update_if_ready()
 
     def _on_bots(self, bots):
@@ -78,22 +76,26 @@ class LoveClient(object):
                 boti.is_connected = True
                 boti.update_from_json(bot)
 
-        if not self._initialized and self._world and self._bots:
-            self._initialized = True
-            self.on_connect()
+        self._call_update_if_ready()
 
         tornado.ioloop.IOLoop.current().call_later(
             self.UPDATE_DELAY, self.api.get_bots
         )
-        self._call_update_if_ready()
 
     def _call_update_if_ready(self):
-        if self._world and self._bots:
-            cur_time = time.time()
-            if self._last_update is None:
-                self._last_update = cur_time - 1
-            self.on_update(cur_time - self._last_update)
-            self._last_update = cur_time
+        ready = self._world and self._bots is not None
+        if not ready:
+            return
+
+        if not self._initialized:
+            self._initialized = True
+            self.on_connect()
+
+        cur_time = time.time()
+        if self._last_update is None:
+            self._last_update = cur_time - 1
+        self.on_update(cur_time - self._last_update)
+        self._last_update = cur_time
 
     def _write_message(self, msg):
         self.connection.write_message(msg)
@@ -103,7 +105,10 @@ class LoveClient(object):
         self._write_message(msg)
 
     def _random_bot_id(self):
-        return "".join(chr(random.randint(ord('A'),ord('Z'))) for i in range(7))
+        while True:
+            bot_id = "".join(chr(random.randint(ord('A'),ord('Z'))) for i in range(7))
+            if not self._bots or bot_id not in self._bots:
+                return bot_id
 
     def _on_idle(self):
         cur_time = time.time()

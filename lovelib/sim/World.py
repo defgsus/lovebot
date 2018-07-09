@@ -59,6 +59,7 @@ class World:
         bot_id = bot_or_id.bot_id if isinstance(bot_or_id, Robot) else bot_or_id
         if bot_id in self.bots:
             self.bots.pop(bot_id)
+            self.add_event("bot_removed", bot_id=bot_id)
 
     def step(self, dt):
         for b in self.bots.values():

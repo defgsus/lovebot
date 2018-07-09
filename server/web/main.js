@@ -128,14 +128,22 @@ function paintWorldCanvas() {
         var bbox = world.df.bbox;
 
         canvas.fillStyle = 'green';
+        canvas.strokeStyle = 'black';
+        canvas.strokeWidth = '3px';
         for (var i in bots) {
             var bot = bots[i];
             var x = (bot.center[0] - bbox.min_x) / (bbox.max_x - bbox.min_x) * res_x;
             var y = res_y - 1 - (bot.center[1] - bbox.min_y) / (bbox.max_y - bbox.min_y) * res_y;
             var r = bot.radius / (bbox.max_y - bbox.min_y) * res_y;
+            var head = bot.heading - Math.PI/2.;
             canvas.beginPath();
             canvas.arc(x, y, r, 0, Math.PI * 2., false);
             canvas.fill();
+
+            canvas.beginPath();
+            canvas.arc(x, y, r*.9, -0.2+head, 0.2+head, false);
+            canvas.arc(x, y, r*.8, -0.2+head, 0.2+head, false);
+            canvas.stroke();
         }
 
     }

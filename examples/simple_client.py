@@ -17,12 +17,12 @@ class MyLoveClient(LoveClient):
             return
 
         max_speed = 3
-        seek_distance = 7. + .5 * math.sin(self.time / 5.)
+        seek_distance = 6. + 5. * math.sin(self.time / 5.)
         bot = self.bot
 
         # get stereo distance to wall ahead
-        tl = bot.trace_heading(-.2)
-        tr = bot.trace_heading(.2)
+        tl = bot.trace_heading_degree(-20)
+        tr = bot.trace_heading_degree(20)
 
         if 1:
             print("{}: target-dist={:.2f}, trace=[{:.2f}, {:.2f}], speed=[{:.2f}, {:.2f}], dir=[{:.2f}, {:.2f}]".format(

@@ -35,6 +35,7 @@ class LoveServer(object):
             "id": con_id,
             "ip": con.request.remote_ip,
             "event_count": -1,
+            "bots": [],
         }
         self.connections[con_id] = new_con
         self.send_event("connection_opened", id=new_con["id"])
@@ -43,8 +44,20 @@ class LoveServer(object):
     def remove_connection(self, con):
         con_id = str(id(con))
         if con_id in self.connections:
+            for bot in self.connections[con_id]["bots"]:
+                # TODO: threading issue
+                self.world.remove_bot(bot)
             del self.connections[con_id]
+
         self.send_event("connection_closed", id=con_id)
+
+    def connection_props(self, con_or_id):
+        if con_or_id in self.connections:
+            return self.connections[con_or_id]
+        con_id = str(id(con_or_id))
+        if con_id in self.connections:
+            return self.connections[con_id]
+        raise KeyError("unknown connection '%s'" % con_or_id)
 
     def send_event(self, event_name, **kwargs):
         """Send to all connections"""
@@ -89,14 +102,8 @@ class LoveServer(object):
 
         elif name == "create_bot":
             name = args.get("name") or self.get_random_bot_name()
-            if args.get("bot_id"):
-                bot_id = args["bot_id"]
-                if bot_id in self.world.bots:
-                    con.error_response("duplicate bot_id '%s'" % bot_id)
-                else:
-                    self.world.create_new_bot(name=name, bot_id=bot_id)
-            else:
-                self.world.create_new_bot(name=name)
+            bot_id = args.get("bot_id")
+            self._create_bot(con, bot_id, name)
 
         elif name == "set_wheel_speed":
             bot_id = args.get("bot_id", "")
@@ -113,6 +120,19 @@ class LoveServer(object):
         else:
             con.error_response("unknown command '%s'" % name)
             return False
+        return True
+
+    def _create_bot(self, con, bot_id=None, name=None):
+        if bot_id:
+            if bot_id in self.world.bots:
+                con.error_response("duplicate bot_id '%s'" % bot_id)
+                return False
+            else:
+                bot = self.world.create_new_bot(bot_id=bot_id, name=name)
+        else:
+            bot = self.world.create_new_bot(name=name)
+        props = self.connection_props(con)
+        props["bots"].append(bot)
         return True
 
     def simulation_mainloop(self):
