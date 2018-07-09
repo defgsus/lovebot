@@ -26,6 +26,8 @@ class LoveClient(object):
         self.UPDATE_DELAY = 1.
         self.IDLE_DELAY = 1.
 
+        url = "ws://%s/ws" % url
+        print("connecting to %s" % url)
         future = tornado.websocket.websocket_connect(
             url=url,
             callback=self._on_connect,
@@ -66,6 +68,7 @@ class LoveClient(object):
         if not self._initialized and self._world and self._bots:
             self._initialized = True
             self.on_connect()
+        self._call_update_if_ready()
 
     def _on_bots(self, bots):
         self._bots = bots
@@ -82,12 +85,15 @@ class LoveClient(object):
         tornado.ioloop.IOLoop.current().call_later(
             self.UPDATE_DELAY, self.api.get_bots
         )
+        self._call_update_if_ready()
 
-        cur_time = time.time()
-        if self._last_update is None:
-            self._last_update = cur_time - 1
-        self.on_update(cur_time - self._last_update)
-        self._last_update = cur_time
+    def _call_update_if_ready(self):
+        if self._world and self._bots:
+            cur_time = time.time()
+            if self._last_update is None:
+                self._last_update = cur_time - 1
+            self.on_update(cur_time - self._last_update)
+            self._last_update = cur_time
 
     def _write_message(self, msg):
         self.connection.write_message(msg)
