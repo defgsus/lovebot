@@ -69,3 +69,17 @@ class DistanceField:
             "bbox": self.bounding_box().to_json(),
             "objects": [o.to_json() for o in self.objects],
         }
+
+    @classmethod
+    def from_json(cls, data):
+        df = cls()
+        for o in data["objects"]:
+            if o["type"] == "point":
+                df.add(Point(o["x"], o["y"]))
+            elif o["type"] == "circle":
+                df.add(Circle(o["x"], o["y"], o["radius"], o["inverted"]))
+            elif o["type"] == "rectangle":
+                df.add(Rectangle(o["x"], o["y"], o["width"], o["height"], o["inverted"]))
+            else:
+                raise ValueError("Invalid csg type '%s'" % o["type"])
+        return df

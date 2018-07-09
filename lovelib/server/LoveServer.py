@@ -76,6 +76,8 @@ class LoveServer(object):
             return False
         args = args or {}
 
+        #print("CMD", time.time(), cmd, args)
+
         if name == "get_world":
             self.send(con, "world", self.world.to_json())
 

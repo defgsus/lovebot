@@ -10,7 +10,7 @@ class WebServer(tornado.web.RequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.resources = {
-            "/index.html", "/main.css", "/main.js", "/jquery.js",
+            "/index.html", "/main.css", "/main.js", "/jquery.js", "/favicon.ico",
         }
         self.loaded_resources = dict()
         self.resource_path = os.path.join(os.path.dirname(__file__), "web")
