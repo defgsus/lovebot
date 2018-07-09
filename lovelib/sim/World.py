@@ -1,10 +1,12 @@
+from ..util import Configuration
 from .DistanceField import *
 from .csg import *
 from .Robot import *
 
 
 class World:
-    def __init__(self):
+    def __init__(self, config):
+        self.config_world = (config or Configuration.default_configuration()).v.world
         self.world_id = "WORLD"
         self.sim_time = 0
         self.bots = {}
@@ -22,6 +24,9 @@ class World:
         #self.create_new_bot(name="Albert").set_wheel_speed(.5, .9)
         #self.create_new_bot(name="Sigmund").set_wheel_speed(1.3, .8)
         #self.create_new_bot(name="Eragon").set_wheel_speed(1.5, 1.8)
+
+    def set_config(self, config=None):
+        self.config_world = (config or Configuration.default_configuration()).v.world
 
     def create_new_bot_id(self):
         self._bot_count += 1
@@ -63,6 +68,7 @@ class World:
 
     def step(self, dt):
         for b in self.bots.values():
+            b.max_speed = self.config_world.max_speed
             b.move(dt)
 
         self.sim_time += dt

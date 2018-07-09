@@ -17,6 +17,8 @@ class Robot:
         self.world = world
         self.radius = radius
         self.name = name or str(bot_id)
+        self.max_speed = 5.
+
         if heading is None:
             heading = random.uniform(0, 7)
         si, ca = math.sin(heading), math.cos(heading)
@@ -53,8 +55,8 @@ class Robot:
         }
 
     def set_wheel_speed(self, left, right):
-        self.l_wheel.speed = left
-        self.r_wheel.speed = right
+        self.l_wheel.speed = max(-self.max_speed,min(self.max_speed, left))
+        self.r_wheel.speed = max(-self.max_speed,min(self.max_speed, right))
 
     def add_force(self, x, y):
         for w in self.wheels:

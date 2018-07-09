@@ -14,8 +14,9 @@ class LoveServer(object):
     _instance = None
 
     def __init__(self, config=None):
-        self.config = (config or Configuration.default_configuration()).v
-        self.world = World()
+        config = config or Configuration.default_configuration()
+        self.config = config.v
+        self.world = World(config)
         self.connections = dict()
         self.main_thread = None
         self.thread = threading.Thread(target=self.simulation_mainloop)
@@ -28,7 +29,9 @@ class LoveServer(object):
         return cls._instance
 
     def set_config(self, config=None):
-        self.config = (config or Configuration.default_configuration()).v
+        config = config or Configuration.default_configuration()
+        self.config = config.v
+        self.world.set_config(config)
 
     def add_connection(self, con):
         con_id = str(id(con))
@@ -42,6 +45,7 @@ class LoveServer(object):
             "con": con,
             "id": con_id,
             "ip": con.request.remote_ip,
+            "user": None,
             "event_count": -1,
             "bots": [],
         }
@@ -97,7 +101,14 @@ class LoveServer(object):
             return False
         args = args or {}
 
-        #print("CMD", time.time(), cmd, args)
+        props = self.connection_props(con)
+        logged_in = props["logged_in"]
+
+        if not logged_in and name not in ("get_world", "get_connections", "get_bots", "login"):
+            con.error_response("No access")
+            return False
+
+        # print("CMD", time.time(), cmd, args)
 
         if name == "get_world":
             self.send(con, "world", self.world.to_json())
@@ -108,15 +119,22 @@ class LoveServer(object):
         elif name == "get_bots":
             self.send(con, "bots", self.bots_json())
 
+        elif name == "login":
+            return self._login(con, args.get("name"), args.get("pw"))
+
+        elif name == "logout":
+            self._logout(con)
+
         elif name == "create_bot":
             name = args.get("name") or self.get_random_bot_name()
             bot_id = args.get("bot_id")
-            self._create_bot(con, bot_id, name)
+            return self._create_bot(con, bot_id, name)
 
         elif name == "set_wheel_speed":
             bot_id = args.get("bot_id", "")
             if bot_id not in self.world.bots:
                 con.error_response("unknown bot_id '%s'" % bot_id)
+                return False
             else:
                 bot = self.world.bots[bot_id]
                 sleft, sright = args.get("left"), args.get("right")
@@ -150,6 +168,26 @@ class LoveServer(object):
         bot = self.world.create_new_bot(**kwargs)
         props["bots"].append(bot)
         return True
+
+    def _login(self, con, user, pw):
+        props = self.connection_props(con)
+        if props["user"]:
+            self._logout(con)
+        valid = False
+        for u, p in (("bergi", "u-und-p")):
+            if u == user and p == pw:
+                valid = True
+                break
+        if not valid:
+            con.error_response("Invalid user or password")
+            return False
+        props["user"] = user
+
+    def _logout(self, con):
+        props = self.connection_props(con)
+        if props["user"]:
+            self.send_event("logged_out", user=props["user"])
+        props["user"] = None
 
     def simulation_mainloop(self):
         last_time = time.time()

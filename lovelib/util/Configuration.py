@@ -25,6 +25,7 @@ class Configuration(object):
     def default_configuration(cls):
         return cls(
             world=cls.Values(
+                max_speed=5.,
                 max_bots=128,
                 max_bots_per_user=5,
             ),
