@@ -6,13 +6,15 @@ import datetime
 import tornado.ioloop
 
 from ..sim.World import *
+from ..util import Configuration
 
 
 class LoveServer(object):
 
     _instance = None
 
-    def __init__(self):
+    def __init__(self, config=None):
+        self.config = (config or Configuration.default_configuration()).v
         self.world = World()
         self.connections = dict()
         self.main_thread = None
@@ -25,10 +27,16 @@ class LoveServer(object):
             cls._instance = LoveServer()
         return cls._instance
 
+    def set_config(self, config=None):
+        self.config = (config or Configuration.default_configuration()).v
+
     def add_connection(self, con):
         con_id = str(id(con))
         if con_id in self.connections:
             con.error_response("'%s' is already connected" % con_id)
+            return False
+        if len(self.connections) >= self.config.server.max_connections:
+            con.error_response("maximum connections reached")
             return False
         new_con = {
             "con": con,
@@ -123,15 +131,23 @@ class LoveServer(object):
         return True
 
     def _create_bot(self, con, bot_id=None, name=None):
+        kwargs = {"name": name}
         if bot_id:
             if bot_id in self.world.bots:
                 con.error_response("duplicate bot_id '%s'" % bot_id)
                 return False
             else:
-                bot = self.world.create_new_bot(bot_id=bot_id, name=name)
-        else:
-            bot = self.world.create_new_bot(name=name)
+                kwargs["bot_id"] = bot_id
         props = self.connection_props(con)
+        if len(self.world.bots) >= self.config.world.max_bots:
+            con.error_response(
+                "reached max number of bots (%s)" % self.config.world.max_bots)
+            return False
+        if len(props["bots"]) >= self.config.world.max_bots_per_user:
+            con.error_response(
+                "reached max number of bots per user (%s)" % self.config.world.max_bots_per_user)
+            return False
+        bot = self.world.create_new_bot(**kwargs)
         props["bots"].append(bot)
         return True
 
