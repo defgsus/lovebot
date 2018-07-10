@@ -32,6 +32,10 @@ class Configuration(object):
             server=cls.Values(
                 port=8001,
                 max_connections=100,
+                user_pwd=[
+                    ["admin", "admin"],
+                    ["admin2", "admin"],
+                ]
             ),
         )
 

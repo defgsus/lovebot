@@ -12,6 +12,12 @@ var API = {
     get_connections: function () {
         send_command("get_connections");
     },
+    get_users: function () {
+        send_command("get_users");
+    },
+    login: function (name, pw) {
+        send_command("login", {name: name, pw: pw});
+    },
     create_bot: function (name) {
         send_command("create_bot", {name: name});
     },
@@ -28,10 +34,6 @@ function connect_to_websocket() {
     websocket.onopen = function() {
         API.get_world();
         API.get_bots();
-        /*API.get_connections();
-        API.create_bot("Viktor");
-        API.get_bots()*/
-        //API.set_wheel_speed("BOT1", .1, .03);
     };
 
     websocket.onmessage = function (evt) {
@@ -49,7 +51,7 @@ function connect_to_websocket() {
             setTimeout(function () { API.get_bots(); }, updateInterval);
         }
         else
-            log(data, "from-server");
+            log(data, data.error ? "from-server error" : "from-server");
     };
 }
 

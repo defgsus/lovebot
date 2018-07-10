@@ -14,6 +14,12 @@ class LoveApi:
     def get_connections(self):
         self.send_command("get_connections")
 
+    def login(self, username, password):
+        self.send_command("login", name=username, pw=password)
+
+    def logout(self):
+        self.send_command("logout")
+
     def create_bot(self, bot_id=None, name=None):
         kwargs = {}
         if bot_id:

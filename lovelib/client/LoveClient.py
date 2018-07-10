@@ -12,7 +12,7 @@ from .LoveWorld import LoveWorld
 
 class LoveClient(object):
 
-    def __init__(self, url):
+    def __init__(self, url, username=None, password=None):
         self.connection = None
         self.api = LoveApi(self.send_command)
         self._world = None
@@ -22,6 +22,9 @@ class LoveClient(object):
         self._initialized = False
         self._last_on_idle = None
         self._last_update = None
+        self._username = username
+        self._password = password
+        self._is_login = False
         self.time = 0.
         self.UPDATE_DELAY = 1.
         self.IDLE_DELAY = 1.
@@ -43,8 +46,13 @@ class LoveClient(object):
         print("connected")
         self.api.get_world()
         self.api.get_bots()
+        if self._username and self._password:
+            self.api.login(self._username, self._password)
 
     def _on_message(self, msg):
+        if msg is None:
+            print("connection closed")
+            exit(-1)
         #print("msg", msg)
         try:
             data = json.loads(msg)
@@ -52,6 +60,8 @@ class LoveClient(object):
         except (TypeError, ValueError):
             print("illegal message '%s'" % msg)
             return
+        if "error" in data:
+            self._on_error(data["error"])
         if "event" in data:
             self._on_event(data["event"]["name"], data["event"].get("data", {}))
         if "world" in data:
@@ -60,7 +70,14 @@ class LoveClient(object):
             self._on_bots(data["bots"])
 
     def _on_event(self, event, data):
+        if event == "login" and data["user"] == self._username:
+            self._is_login = True
+            self._call_update_if_ready()
         self.on_event(event, data)
+
+    def _on_error(self, error):
+        print("error:", error)
+        self.on_error(error)
 
     def _on_world(self, world):
         self._world = world
@@ -84,6 +101,7 @@ class LoveClient(object):
 
     def _call_update_if_ready(self):
         ready = self._world and self._bots is not None
+        ready &= not (self._username and self._password) or self._is_login
         if not ready:
             return
 
@@ -125,11 +143,12 @@ class LoveClient(object):
         tornado.ioloop.IOLoop.instance().add_callback(self._on_idle)
         return tornado.ioloop.IOLoop.instance().start()
 
-    def send_command(self, name, **kwargs):
+    def send_command(self, _cmd_name, **kwargs):
+        #print("send", _cmd_name, kwargs)
         if kwargs:
-            self._write_json({"cmd": name, "args": kwargs})
+            self._write_json({"cmd": _cmd_name, "args": kwargs})
         else:
-            self._write_json({"cmd": name})
+            self._write_json({"cmd": _cmd_name})
 
     def get_bot(self, bot_id):
         if bot_id not in self._bot_interfaces:
@@ -150,6 +169,9 @@ class LoveClient(object):
     #### overload these ####
 
     def on_connect(self):
+        pass
+
+    def on_error(self, error):
         pass
 
     def on_event(self, name, data):

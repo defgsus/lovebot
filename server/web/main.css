@@ -46,6 +46,10 @@
     padding-left: 10px;
 }
 
+.from-server.error {
+    background: #ffc0c0;
+}
+
 .command-forms {
     position: relative;
 }

@@ -41,7 +41,7 @@ class MyLoveClient(LoveClient):
 
 
 if __name__ == "__main__":
-    client = MyLoveClient("127.0.0.1:8001")
+    client = MyLoveClient("127.0.0.1:8001", "admin", "admin")
     client.mainloop()
 
 

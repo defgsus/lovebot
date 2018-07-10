@@ -7,6 +7,7 @@ import tornado.ioloop
 
 from ..sim.World import *
 from ..util import Configuration
+from .LoveUser import LoveUser
 
 
 class LoveServer(object):
@@ -18,6 +19,7 @@ class LoveServer(object):
         self.config = config.v
         self.world = World(config)
         self.connections = dict()
+        self.users = dict()
         self.main_thread = None
         self.thread = threading.Thread(target=self.simulation_mainloop)
         self.thread.start()
@@ -47,18 +49,16 @@ class LoveServer(object):
             "ip": con.request.remote_ip,
             "user": None,
             "event_count": -1,
-            "bots": [],
         }
         self.connections[con_id] = new_con
         self.send_event("connection_opened", id=new_con["id"])
         return True
 
     def remove_connection(self, con):
+        if self.get_user(con):
+            self._logout(con)
         con_id = str(id(con))
         if con_id in self.connections:
-            for bot in self.connections[con_id]["bots"]:
-                # TODO: threading issue
-                self.world.remove_bot(bot)
             del self.connections[con_id]
 
         self.send_event("connection_closed", id=con_id)
@@ -86,11 +86,30 @@ class LoveServer(object):
             for c in self.connections.values()
         ]
 
-    def bots_json(self):
+    def users_json(self):
         return [
-            b.to_json()
-            for b in self.world.bots.values()
+            {"id": u.username,
+             "con_id": u.con["id"],
+             "bots": [b.bot_id for b in u.bots]
+             }
+            for u in self.users.values()
         ]
+
+    def bots_json(self):
+        bots = []
+        for user in self.users.values():
+            for b in user.bots:
+                data = b.to_json()
+                data["user"] = user.username
+                bots.append(data)
+        return bots
+
+    def get_user(self, con):
+        try:
+            con = self.connection_props(con)
+        except KeyError:
+            return None
+        return con.get("user")
 
     def on_command(self, con, cmd, args=None):
         if isinstance(cmd, str):
@@ -102,9 +121,11 @@ class LoveServer(object):
         args = args or {}
 
         props = self.connection_props(con)
-        logged_in = props["logged_in"]
+        logged_in = bool(props["user"])
 
-        if not logged_in and name not in ("get_world", "get_connections", "get_bots", "login"):
+        PUBLIC_CMDS = ("get_world", "get_connections", "get_bots", "get_users", "login")
+
+        if not logged_in and name not in PUBLIC_CMDS:
             con.error_response("No access")
             return False
 
@@ -115,6 +136,9 @@ class LoveServer(object):
 
         elif name == "get_connections":
             self.send(con, "connections", self.connections_json())
+
+        elif name == "get_users":
+            self.send(con, "users", self.users_json())
 
         elif name == "get_bots":
             self.send(con, "bots", self.bots_json())
@@ -149,6 +173,9 @@ class LoveServer(object):
         return True
 
     def _create_bot(self, con, bot_id=None, name=None):
+        user = self.get_user(con)
+        assert user
+
         kwargs = {"name": name}
         if bot_id:
             if bot_id in self.world.bots:
@@ -156,38 +183,48 @@ class LoveServer(object):
                 return False
             else:
                 kwargs["bot_id"] = bot_id
-        props = self.connection_props(con)
+
         if len(self.world.bots) >= self.config.world.max_bots:
             con.error_response(
                 "reached max number of bots (%s)" % self.config.world.max_bots)
             return False
-        if len(props["bots"]) >= self.config.world.max_bots_per_user:
+        if len(user.bots) >= self.config.world.max_bots_per_user:
             con.error_response(
                 "reached max number of bots per user (%s)" % self.config.world.max_bots_per_user)
             return False
         bot = self.world.create_new_bot(**kwargs)
-        props["bots"].append(bot)
+        user.bots.append(bot)
         return True
 
     def _login(self, con, user, pw):
-        props = self.connection_props(con)
-        if props["user"]:
-            self._logout(con)
+        if user in self.users:
+            con.error_response("Already logged in")
+            return False
+
         valid = False
-        for u, p in (("bergi", "u-und-p")):
+        for u, p in self.config.server.user_pwd:
             if u == user and p == pw:
                 valid = True
                 break
         if not valid:
             con.error_response("Invalid user or password")
             return False
-        props["user"] = user
+
+        props = self.connection_props(con)
+        love_user = LoveUser(self, props, user)
+        props["user"] = love_user
+        self.users[user] = love_user
+        self.send_event("login", user=love_user.username)
 
     def _logout(self, con):
         props = self.connection_props(con)
-        if props["user"]:
-            self.send_event("logged_out", user=props["user"])
+        user = props["user"]
+
         props["user"] = None
+        del self.users[user.username]
+        self.send_event("logout", user=user.username)
+        for b in user.bots:
+            self.world.remove_bot(b.bot_id)
 
     def simulation_mainloop(self):
         last_time = time.time()
