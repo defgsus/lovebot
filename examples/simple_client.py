@@ -22,10 +22,10 @@ class MyLoveClient(LoveClient):
                 continue
 
             # get stereo distance to wall ahead
-            tl = bot.trace_heading_degree(-20)
-            tr = bot.trace_heading_degree(20)
+            tl = bot.trace_degree(-20)
+            tr = bot.trace_degree(20)
 
-            if 1:
+            if 0:
                 print("{}: target-dist={:.2f}, trace=[{:.2f}, {:.2f}], speed=[{:.2f}, {:.2f}], dir=[{:.2f}, {:.2f}]".format(
                     bot.name,
                     seek_distance,

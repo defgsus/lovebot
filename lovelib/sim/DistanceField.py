@@ -33,11 +33,13 @@ class DistanceField:
         d = math.sqrt(d)
         return dx / d, dy / d
 
-    def trace(self, x, y, nx, ny, max_steps=None):
+    def trace(self, x, y, nx, ny, max_steps=None, dist_func=None):
+        if dist_func is None:
+            dist_func = self.distance_to
         t = 0.
         for i in range(max_steps or self.MAX_STEPS):
             px, py = x + t * nx, y + t * ny
-            d = self.distance_to(px, py)
+            d = dist_func(px, py)
             if d <= self.MIN_SURFACE:
                 return t
             t += d * self.FUDGE

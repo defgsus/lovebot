@@ -49,21 +49,23 @@ class LoveBot(object):
         self.client.api.set_wheel_speed(self.bot_id, left, right)
 
     def trace_front(self, max_steps=None):
-        return self.client.world.df.trace(
+        return self.client.world.trace(
             self.x + self.radius * self.nx,
             self.y + self.radius * self.ny,
             self.nx, self.ny,
-            max_steps=max_steps
+            max_steps=max_steps,
+            exclude_bot_ids=[self.bot_id],
         )
 
-    def trace_heading(self, heading, max_steps=None):
-        nx, ny = math.sin(self.heading+heading), math.cos(self.heading+heading)
-        return self.client.world.df.trace(
+    def trace_radians(self, radians, max_steps=None):
+        nx, ny = math.sin(self.heading + radians), math.cos(self.heading + radians)
+        return self.client.world.trace(
             self.x + self.radius * nx,
             self.y + self.radius * ny,
             nx, ny,
-            max_steps=max_steps
+            max_steps=max_steps,
+            exclude_bot_ids=[self.bot_id],
         )
 
-    def trace_heading_degree(self, heading, max_steps=None):
-        return self.trace_heading(heading / 180. * math.pi, max_steps)
+    def trace_degree(self, degree, max_steps=None):
+        return self.trace_radians(degree / 180. * math.pi, max_steps)
