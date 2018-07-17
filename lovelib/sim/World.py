@@ -16,10 +16,15 @@ class World:
 
         self.df = DistanceField()
 
-        self.df.add(Rectangle(0, 0, 15, 15, True))
-        self.df.add(Rectangle(7, 2, 5, 9))  # 2, -7
-        self.df.add(Rectangle(-4, -4, 6, 3))
-        self.df.add(Circle(-4, 5, 3))
+        self.df.add(CenteredRectangle(0, 0, 30, 30, True))
+        self.df.add(Rectangle(-25, -25, 10, -20))
+        self.df.add(Rectangle(-25, -20, -20, 10))
+        self.df.add(Rectangle(-25, 15, 25, 20))
+        self.df.add(Rectangle(20, -25, 25, 10))
+        self.df.add(Rectangle(0, 25, 5, 30))
+        self.df.add(Rectangle(-25, 20, -20, 25))
+        self.df.add(Circle(-5, -5, 3))
+        self.df.add(Circle(7, 7, 4))
 
         #self.create_new_bot(name="Albert").set_wheel_speed(.5, .9)
         #self.create_new_bot(name="Sigmund").set_wheel_speed(1.3, .8)

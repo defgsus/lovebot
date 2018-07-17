@@ -43,12 +43,14 @@ class DistanceField:
             t += d * self.FUDGE
         return self.MAX_DISTANCE
 
-    def save_png(self, file, width, height, bounding_box=None):
+    def save_png(self, file, width, height, bounding_box=None, quant=4):
         import png
 
         if bounding_box is None:
             bounding_box = self.bounding_box()
             bounding_box.adjust(-1,-1, 1,1)
+
+        cache = dict()
 
         rows = []
         for py in range(height):
@@ -56,9 +58,16 @@ class DistanceField:
             row = []
             for px in range(width):
                 x = bounding_box.min_x + bounding_box.width * px / width
-                d = self.distance_to(x, y)
-                rgb = [30,30,30] if d > 0 else [30,100,100]
-                row += rgb
+                if quant > 1:
+                    index = ((px//quant)*quant, (py//quant)*quant)
+                    if index not in cache:
+                        cache[index] = self.distance_to(x, y)
+                    d = cache[index]
+                else:
+                    d = self.distance_to(x, y)
+                d = -min(0, d)*5
+                rgb = [30, 30+d*100, 30+d*150]
+                row += [max(0,min(255, int(c))) for c in rgb]
             rows.append(row)
 
         image = png.from_array(rows, "RGB")
@@ -79,7 +88,9 @@ class DistanceField:
             elif o["type"] == "circle":
                 df.add(Circle(o["x"], o["y"], o["radius"], o["inverted"]))
             elif o["type"] == "rectangle":
-                df.add(Rectangle(o["x"], o["y"], o["width"], o["height"], o["inverted"]))
+                df.add(Rectangle(o["x1"], o["y1"], o["x2"], o["y2"], o["inverted"]))
+            elif o["type"] == "centered_rectangle":
+                df.add(CenteredRectangle(o["x"], o["y"], o["width"], o["height"], o["inverted"]))
             else:
                 raise ValueError("Invalid csg type '%s'" % o["type"])
         return df

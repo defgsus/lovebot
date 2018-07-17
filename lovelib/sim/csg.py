@@ -94,6 +94,42 @@ class Circle(Point):
 
 
 class Rectangle(Point):
+    def __init__(self, x1, y1, x2, y2, inverted=False):
+        super().__init__(x1, y1)
+        self.x2 = x2
+        self.y2 = y2
+        self.inverted = inverted
+
+    @property
+    def width(self): return self.x2 - self.x
+    @property
+    def height(self): return self.y2 - self.y
+    @property
+    def center_x(self): return (self.x + self.x2) / 2.
+    @property
+    def center_y(self): return (self.y + self.y2) / 2.
+
+    def distance_to(self, x, y):
+        dx, dy = abs(x-self.center_x) - self.width/2., abs(y-self.center_y) - self.height/2.
+        d1, d2 = max(dx, 0), max(dy, 0)
+        d = min(max(dx, dy), 0.0) + math.sqrt(d1*d1+d2*d2)
+        return -d if self.inverted else d
+
+    def bounding_box(self):
+        return BoundingBox(self.x, self.y, self.x2, self.y2)
+
+    def to_json(self):
+        return {
+            "type": "rectangle",
+            "x1": self.x,
+            "y1": self.y,
+            "x2": self.x2,
+            "y2": self.y2,
+            "inverted": self.inverted,
+        }
+
+
+class CenteredRectangle(Point):
     def __init__(self, x, y, width, height, inverted=False):
         super().__init__(x, y)
         self.width, self.height = width, height
@@ -111,7 +147,7 @@ class Rectangle(Point):
 
     def to_json(self):
         return {
-            "type": "rectangle",
+            "type": "centered_rectangle",
             "x": self.x,
             "y": self.y,
             "width": self.width,

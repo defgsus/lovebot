@@ -39,6 +39,10 @@ function connect_to_websocket() {
         API.get_bots();
     };
 
+    websocket.onclose = function() {
+        log_event({ts: 0, name: "lost_connection"});
+    };
+
     websocket.onmessage = function (evt) {
         var data = JSON.parse(evt.data);
 
@@ -74,7 +78,7 @@ function send_command(cmd_name, args) {
 
 function time_str(seconds) {
     return Math.round(seconds/60/60)+"h"+Math.round(seconds/60)+"m"
-          +Math.round(seconds)+"."+Math.round(seconds*1000)+"s"
+          +Math.round(seconds)+"s";
 }
 
 function log(msg, klass) {
