@@ -28,5 +28,8 @@ class LoveApi:
             kwargs["name"] = name
         self.send_command("create_bot", **kwargs)
 
+    def remove_bot(self, bot_id):
+        self.send_command("remove_bot", bot_id=bot_id)
+
     def set_wheel_speed(self, bot_id, left, right):
         self.send_command("set_wheel_speed", bot_id=bot_id, left=left, right=right)

@@ -18,8 +18,11 @@ var API = {
     login: function (name, pw) {
         send_command("login", {name: name, pw: pw});
     },
-    create_bot: function (name) {
-        send_command("create_bot", {name: name});
+    create_bot: function (bot_id, name) {
+        send_command("create_bot", {bot_id: bot_id, name: name});
+    },
+    remove_bot: function (bot_id) {
+        send_command("remove_bot", {bot_id: bot_id});
     },
     set_wheel_speed: function(bot_id, left, right) {
         send_command("set_wheel_speed", {id: bot_id, speed: [left, right]})
@@ -38,6 +41,7 @@ function connect_to_websocket() {
 
     websocket.onmessage = function (evt) {
         var data = JSON.parse(evt.data);
+
         if (data.event)
             log_event(data.event);
 
@@ -45,12 +49,14 @@ function connect_to_websocket() {
             world = data.world;
             paintWorldCanvas();
         }
-        else if (data.bots) {
+
+        if (data.bots) {
             bots = data.bots;
             paintWorldCanvas();
             setTimeout(function () { API.get_bots(); }, updateInterval);
         }
-        else
+
+        if (!(data.event || data.bots))
             log(data, data.error ? "from-server error" : "from-server");
     };
 }
@@ -66,6 +72,10 @@ function send_command(cmd_name, args) {
     websocket.send(msg);
 }
 
+function time_str(seconds) {
+    return Math.round(seconds/60/60)+"h"+Math.round(seconds/60)+"m"
+          +Math.round(seconds)+"."+Math.round(seconds*1000)+"s"
+}
 
 function log(msg, klass) {
     var ts = "";
@@ -77,13 +87,13 @@ function log(msg, klass) {
     var html = "<div";
     if (klass)
         html += ' class="'+klass+'"';
-    html += ">"+ts+": "+msg+"</div>";
+    html += ">"+time_str(ts)+": "+msg+"</div>";
     $(".log-window").prepend($(html));
 }
 
 function log_event(event) {
     var msg = JSON.stringify(event.data);
-    var html = "<div>"+event.ts+": "+event.name+": "+msg+"</div>";
+    var html = "<div>"+time_str(event.ts)+": "+event.name+": "+msg+"</div>";
     $(".event-log-window").prepend(html);
 }
 
@@ -161,3 +171,4 @@ $(function() {
         updateInterval = parseInt($("#update-interval").val());
     });
 });
+

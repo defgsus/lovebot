@@ -98,7 +98,7 @@ class LoveServer(object):
     def bots_json(self):
         bots = []
         for user in self.users.values():
-            for b in user.bots:
+            for b in user.bots.values():
                 data = b.to_json()
                 data["user"] = user.username
                 bots.append(data)
@@ -154,6 +154,10 @@ class LoveServer(object):
             bot_id = args.get("bot_id")
             return self._create_bot(con, bot_id, name)
 
+        elif name == "remove_bot":
+            bot_id = args.get("bot_id")
+            return self._remove_bot(con, bot_id)
+
         elif name == "set_wheel_speed":
             bot_id = args.get("bot_id", "")
             if bot_id not in self.world.bots:
@@ -193,7 +197,23 @@ class LoveServer(object):
                 "reached max number of bots per user (%s)" % self.config.world.max_bots_per_user)
             return False
         bot = self.world.create_new_bot(**kwargs)
-        user.bots.append(bot)
+        user.add_bot(bot)
+        return True
+
+    def _remove_bot(self, con, bot_id):
+        user = self.get_user(con)
+        assert user
+
+        if bot_id not in self.world.bots:
+            con.error_response("unknown bot_id '%s'" % bot_id)
+            return False
+
+        if bot_id not in user.bots:
+            con.error_response("no access")
+            return False
+
+        user.remove_bot(bot_id)
+        self.world.remove_bot(bot_id)
         return True
 
     def _login(self, con, user, pw):
@@ -223,8 +243,8 @@ class LoveServer(object):
         props["user"] = None
         del self.users[user.username]
         self.send_event("logout", user=user.username)
-        for b in user.bots:
-            self.world.remove_bot(b.bot_id)
+        for bot_id in user.bots:
+            self.world.remove_bot(bot_id)
 
     def simulation_mainloop(self):
         last_time = time.time()
