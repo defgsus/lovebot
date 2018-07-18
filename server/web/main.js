@@ -37,6 +37,7 @@ function connect_to_websocket() {
     websocket.onopen = function() {
         API.get_world();
         API.get_bots();
+        API.get_users();
     };
 
     websocket.onclose = function() {
