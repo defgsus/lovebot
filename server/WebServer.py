@@ -4,13 +4,21 @@ from io import BytesIO
 import tornado.web
 
 from lovelib.server import LoveServer
+from lovelib.util import Configuration
 
 
 class WebServer(tornado.web.RequestHandler):
     def __init__(self, *args, **kwargs):
+        if "config" in kwargs:
+            self.config = kwargs.pop("config")
+        else:
+            self.config = Configuration.default_configuration()
         super().__init__(*args, **kwargs)
         self.resources = {
             "/index.html", "/main.css", "/main.js", "/jquery.js", "/favicon.ico",
+        }
+        self.templates = {
+            "/main.js": lambda s: s.decode("utf-8").replace("{{host}}", self.config.server.host).replace("{{port}}", str(self.config.server.port)).encode("utf-8")
         }
         self.loaded_resources = dict()
         self.resource_path = os.path.join(os.path.dirname(__file__), "web")
@@ -23,7 +31,10 @@ class WebServer(tornado.web.RequestHandler):
             if r in self.resources:
                 fn = self.get_resource_filename(r)
                 with open(fn, "rb") as f:
-                    self.loaded_resources[r] = f.read()
+                    data = f.read()
+                    if r in self.templates:
+                        data = self.templates[r](data)
+                    self.loaded_resources[r] = data
             else:
                 if r == "/worldmap.png":
                     data = BytesIO()

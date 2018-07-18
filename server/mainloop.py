@@ -18,7 +18,7 @@ def run(config=None):
         (r"/.*", WebServer),
     ])
     application.listen(config.server.port)
-    print("Starting server on port %s" % config.server.port)
+    print("Starting server on %s:%s" % (config.server.host, config.server.port))
 
     io_loop = tornado.ioloop.IOLoop.current()
 

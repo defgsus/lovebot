@@ -26,6 +26,7 @@ class Configuration(object):
                 max_bots_per_user=5,
             ),
             server=cls(
+                host="127.0.0.1",
                 port=8001,
                 max_connections=100,
                 user_pwd=[

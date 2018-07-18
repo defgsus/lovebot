@@ -32,7 +32,7 @@ var API = {
 
 function connect_to_websocket() {
 
-    websocket = new WebSocket("ws://127.0.0.1:8001/ws");
+    websocket = new WebSocket("ws://{{host}}:{{port}}/ws");
 
     websocket.onopen = function() {
         API.get_world();
