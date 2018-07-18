@@ -88,7 +88,7 @@ class LoveServer(object):
         return [
             {"id": u.username,
              "con_id": u.con["id"],
-             "bots": [b.bot_id for b in u.bots]
+             "bots": [b.bot_id for b in u.bots.values()]
              }
             for u in self.users.values()
         ]
