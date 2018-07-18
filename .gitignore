@@ -1,8 +1,6 @@
 *credentials*
-db.sqlite3
-
-# local settings
 settings_local.py
+*.json
 
 # libreoffice
 .~lock*.o*

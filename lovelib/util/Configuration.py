@@ -3,33 +3,29 @@ import json
 
 class Configuration(object):
 
-    class Values(object):
-        def __init__(self, **data):
-            self._data = data
-
-        def __getattribute__(self, key):
-            if key.startswith("_"):
-                return object.__getattribute__(self, key)
-            return self._data[key]
-
-        def __setattr__(self, key, value):
-            if key.startswith("_"):
-                super().__setattr__(key, value)
-            else:
-                self._data[key] = value
-
     def __init__(self, **kwargs):
-        self.v = self.Values(**kwargs)
+        self._data = kwargs
+
+    def __getattribute__(self, name):
+        if name.startswith("_") or name in self.__class__.__dict__:
+            return super().__getattribute__(name)
+        return self._data[name]
+
+    def __setattr__(self, key, value):
+        if key.startswith("_") or key in self.__class__.__dict__:
+            super().__setattr__(key, value)
+        else:
+            self._data[key] = value
 
     @classmethod
     def default_configuration(cls):
         return cls(
-            world=cls.Values(
+            world=cls(
                 max_speed=5.,
                 max_bots=128,
                 max_bots_per_user=5,
             ),
-            server=cls.Values(
+            server=cls(
                 port=8001,
                 max_connections=100,
                 user_pwd=[
@@ -51,7 +47,7 @@ class Configuration(object):
     def from_file(cls, filename=None):
         filename = filename or cls.default_filename()
         with open(filename, "rt") as fp:
-            return cls.from_json(fp)
+            return cls.from_json(fp.read())
 
     @classmethod
     def from_json(cls, object_or_str):
@@ -65,26 +61,22 @@ class Configuration(object):
             val = data[key]
             if isinstance(val, dict):
                 val = cls.from_json(val)
-            conf.v._data[key] = val
+            conf._data[key] = val
         return conf
 
-    def _to_json(self, instance):
-        if isinstance(instance, self.Values):
-            _data = instance._data
-        else:
-            _data = instance.v._data
+    def to_json(self):
         data = dict()
-        for key in _data:
-            val = _data[key]
-            if isinstance(val, (Configuration, self.Values)):
-                val = self._to_json(val)
+        for key in self._data:
+            val = self._data[key]
+            if isinstance(val, Configuration):
+                val = val.to_json()
             data[key] = val
         return data
 
     def save(self, filename=None):
         filename = filename or self.default_filename()
         with open(filename, "wt") as fp:
-            json.dump(self._to_json(self), fp, indent="    ")
+            json.dump(self.to_json(), fp, indent="    ")
 
 
 if __name__ == "__main__":

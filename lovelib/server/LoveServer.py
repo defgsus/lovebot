@@ -15,9 +15,8 @@ class LoveServer(object):
     _instance = None
 
     def __init__(self, config=None):
-        config = config or Configuration.default_configuration()
-        self.config = config.v
-        self.world = World(config)
+        self.config = config or Configuration.default_configuration()
+        self.world = World(self.config)
         self.connections = dict()
         self.users = dict()
         self.main_thread = None
@@ -31,9 +30,8 @@ class LoveServer(object):
         return cls._instance
 
     def set_config(self, config=None):
-        config = config or Configuration.default_configuration()
-        self.config = config.v
-        self.world.set_config(config)
+        self.config = config or Configuration.default_configuration()
+        self.world.set_config(self.config)
 
     def add_connection(self, con):
         con_id = str(id(con))

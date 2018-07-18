@@ -17,8 +17,8 @@ def run(config=None):
         (r"/ws", WebSocket),
         (r"/.*", WebServer),
     ])
-    application.listen(config.v.server.port)
-    print("Starting server on port %s" % config.v.server.port)
+    application.listen(config.server.port)
+    print("Starting server on port %s" % config.server.port)
 
     io_loop = tornado.ioloop.IOLoop.current()
 
