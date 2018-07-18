@@ -27,7 +27,7 @@ class Configuration(object):
             ),
             server=cls(
                 host="127.0.0.1",
-                port=8001,
+                port=8002,
                 max_connections=100,
                 user_pwd=[
                     ["admin", "admin"],

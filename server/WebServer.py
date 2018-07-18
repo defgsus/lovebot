@@ -4,15 +4,11 @@ from io import BytesIO
 import tornado.web
 
 from lovelib.server import LoveServer
-from lovelib.util import Configuration
 
 
 class WebServer(tornado.web.RequestHandler):
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            self.config = kwargs.pop("config")
-        else:
-            self.config = Configuration.default_configuration()
+        self.config = LoveServer.instance().config
         super().__init__(*args, **kwargs)
         self.resources = {
             "/index.html", "/main.css", "/main.js", "/jquery.js", "/favicon.ico",
