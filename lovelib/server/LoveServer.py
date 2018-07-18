@@ -275,5 +275,6 @@ class LoveServer(object):
             self.main_thread.add_callback(functools.partial(_send_them, send_events))
 
     def get_random_bot_name(self):
-        NAMES = ["Sebastian", "David", "Cordula", "Ingrid"]
+        NAMES = ["Sebastian", "David", "Cordula", "Ingrid", "Bärbel", "Thorsten",
+                 "Karin", "Ursula", "Jakob", "Dieter", "Erika", "Anita", "Franz"]
         return NAMES[random.randrange(len(NAMES))]

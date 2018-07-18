@@ -65,3 +65,21 @@
 .command-forms form input {
     max-width: 12%;
 }
+
+
+
+.users-window {
+    background: #eee;
+    border-radius: 5px;
+    padding: 6px;
+}
+
+.users-window div {
+    font-weight: bold;
+}
+
+.users-window div div {
+    font-weight: normal;
+    margin-left: 10px;
+    font-family: Mono, Monospaced, monospace;
+}

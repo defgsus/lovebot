@@ -46,9 +46,6 @@ function connect_to_websocket() {
     websocket.onmessage = function (evt) {
         var data = JSON.parse(evt.data);
 
-        if (data.event)
-            log_event(data.event);
-
         if (data.world) {
             world = data.world;
             paintWorldCanvas();
@@ -58,6 +55,16 @@ function connect_to_websocket() {
             bots = data.bots;
             paintWorldCanvas();
             setTimeout(function () { API.get_bots(); }, updateInterval);
+        }
+
+        if (data.event) {
+            log_event(data.event);
+            API.get_bots();
+            API.get_users();
+        }
+
+        if (data.users) {
+            updateUsersBox(data.users);
         }
 
         if (!(data.event || data.bots))
@@ -101,6 +108,32 @@ function log_event(event) {
     $(".event-log-window").prepend(html);
 }
 
+function updateUsersBox(users) {
+    var html = "";
+    for (var i in users) {
+        var user = users[i];
+        html += '<div>' + user.id;
+        for (var j in user.bots) {
+            var bot_id = user.bots[j];
+            var bot = get_bot(bot_id);
+            if (bot) {
+                html += '<div>'+bot.name+'</div>';
+            } else {
+                html += '<div>'+bot_id+'</div>';
+            }
+        }
+        html += '</div>';
+    }
+    $(".users-window").html(html);
+}
+
+function get_bot(bot_id) {
+    for (var i in bots) {
+        if (bots[i].id === bot_id)
+            return bots[i];
+    }
+    return null;
+}
 
 function hookToCommandForms() {
     $("form[data-cmd]").each(function(i, elem) {
