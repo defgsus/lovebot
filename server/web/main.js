@@ -77,8 +77,8 @@ function send_command(cmd_name, args) {
 }
 
 function time_str(seconds) {
-    return Math.round(seconds/60/60)+"h"+Math.round(seconds/60)+"m"
-          +Math.round(seconds)+"s";
+    return Math.round(seconds/60/60)+"h"+(Math.round(seconds/60) % 60)+"m"
+          +(Math.round(seconds) % 60)+"s";
 }
 
 function log(msg, klass) {

@@ -1,7 +1,9 @@
+import os
 import random
 import math
 
 from lovelib.client import LoveClient
+from lovelib.util import Configuration
 
 
 class MyLoveClient(LoveClient):
@@ -42,7 +44,21 @@ class MyLoveClient(LoveClient):
 
 
 if __name__ == "__main__":
-    client = MyLoveClient("127.0.0.1:8001", "admin", "admin")
+    CONFIG_FILE = "remote-config.json"
+
+    config = Configuration(
+        host="127.0.0.1",
+        port=8000,
+        user="admin",
+        password="admin",
+    )
+    if 0:  # enable to save a default config file
+        config.save(CONFIG_FILE)
+
+    if os.path.exists(CONFIG_FILE):
+        config = Configuration.from_file(CONFIG_FILE)
+
+    client = MyLoveClient("%s:%s" % (config.host, config.port), config.user, config.password)
     client.mainloop()
 
 

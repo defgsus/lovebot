@@ -69,3 +69,12 @@ class LoveBot(object):
 
     def trace_degree(self, degree, max_steps=None):
         return self.trace_radians(degree / 180. * math.pi, max_steps)
+
+    def trace_left(self, max_steps=None):
+        return self.trace_degree(90, max_steps=max_steps)
+
+    def trace_right(self, max_steps=None):
+        return self.trace_degree(-90, max_steps=max_steps)
+
+    def trace_back(self, max_steps=None):
+        return self.trace_degree(180, max_steps=max_steps)
