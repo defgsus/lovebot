@@ -12,7 +12,8 @@ from .LoveWorld import LoveWorld
 
 class LoveClient(object):
 
-    def __init__(self, url, username=None, password=None):
+    def __init__(self, url=None, username=None, password=None, config=None):
+        self.config = config
         self.connection = None
         self.api = LoveApi(self.send_command)
         self._world = None
@@ -28,6 +29,11 @@ class LoveClient(object):
         self.time = 0.
         self.UPDATE_DELAY = 1.
         self.IDLE_DELAY = 1.
+
+        if self.config is not None:
+            url = "%s:%s" % (self.config.host, self.config.port)
+            self._username = config.user
+            self._password = config.password
 
         url = "ws://%s/ws" % url
         print("connecting to %s" % url)

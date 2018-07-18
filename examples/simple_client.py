@@ -9,7 +9,7 @@ from lovelib.util import Configuration
 class MyLoveClient(LoveClient):
 
     def on_connect(self):
-        self.bots = [self.create_bot() for i in range(5)]
+        self.bots = [self.create_bot() for i in range(self.config.num_bots)]
 
     def on_event(self, name, data):
         pass
@@ -51,14 +51,16 @@ if __name__ == "__main__":
         port=8000,
         user="admin",
         password="admin",
+        num_bots=5,
     )
-    if 0:  # enable to save a default config file
-        config.save(CONFIG_FILE)
+
+    # save a default config file
+    #config.save(CONFIG_FILE)
 
     if os.path.exists(CONFIG_FILE):
         config = Configuration.from_file(CONFIG_FILE)
 
-    client = MyLoveClient("%s:%s" % (config.host, config.port), config.user, config.password)
+    client = MyLoveClient(config=config)
     client.mainloop()
 
 
